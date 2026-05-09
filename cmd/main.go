@@ -1,6 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"os"
+)
 
 type Task struct {
 	ID          string `json:"id"`
@@ -11,7 +15,16 @@ type Task struct {
 }
 
 func main() {
-	fmt.Println("Hello, World!")
-}
+	filename := "tasks.json"
 
-// Need a JSON to track a task
+	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
+
+	if err != nil {
+		if errors.Is(err, os.ErrExist) {
+			fmt.Println("File already exists")
+		} else {
+			fmt.Printf("Err in opening the file %v\n", err)
+		}
+	}
+	defer file.Close()
+}
