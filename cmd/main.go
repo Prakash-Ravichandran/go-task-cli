@@ -29,7 +29,18 @@ func main() {
 		}
 	}
 
-	var firstItem Task
+	var allTasks []Task
+
+	existingData, err := os.ReadFile(filename)
+
+	if err == nil && len(existingData) > 0 {
+		err := json.Unmarshal(existingData, &allTasks)
+		if err != nil {
+			fmt.Println("Error reading existing JSON:", err)
+		}
+	}
+
+	var newTask Task
 	task_cli := flag.String("task-cli", "add", "a task for the user can add/update/delete task")
 	task := flag.String("add", "todo", "a task for the user can add to a task")
 	task_id := flag.Int("id", 0, "an identifer for the task")
@@ -39,12 +50,15 @@ func main() {
 	fmt.Printf("given task is %s \n", *task)
 	fmt.Printf("id is %d \n", *task_id)
 
-	firstItem = Task{ID: task_id, Description: task, Status: "", CreatedAt: "", UpdatedAt: ""}
+	newTask = Task{ID: task_id, Description: task, Status: "", CreatedAt: "", UpdatedAt: ""}
 
-	data, _ := json.MarshalIndent(firstItem, "", "  ")
+	allTasks = append(allTasks, newTask)
+
+	data, _ := json.MarshalIndent(allTasks, "", "  ") // convert []byte
 
 	os.WriteFile(filename, data, 0644)
 	defer file.Close()
 }
 
 // 1. get type of task - add, update, delete, mark-in-progress, mark-done, list
+// go run main.go --task-cli=add -add "sell mango" -id 3
