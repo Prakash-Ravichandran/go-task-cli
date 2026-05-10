@@ -43,14 +43,18 @@ func main() {
 	var newTask Task
 	task_cli := flag.String("task-cli", "add", "a task for the user can add/update/delete task")
 	task := flag.String("add", "todo", "a task for the user can add to a task")
-	task_id := flag.Int("id", 0, "an identifer for the task")
+	task_id := flag.Int("id", 0, "an identifer for the task") // TODO: remove it for add
 	// task_description := flag.String("")
 	flag.Parse()
 	fmt.Printf("given command is %s \n", *task_cli)
 	fmt.Printf("given task is %s \n", *task)
 	fmt.Printf("id is %d \n", *task_id)
 
-	newTask = Task{ID: task_id, Description: task, Status: "", CreatedAt: "", UpdatedAt: ""}
+	newTaskID := len(allTasks) + 1
+
+	fmt.Println("newTaskID", newTaskID)
+
+	newTask = Task{ID: &newTaskID, Description: task, Status: "", CreatedAt: "", UpdatedAt: ""}
 
 	allTasks = append(allTasks, newTask)
 
