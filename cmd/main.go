@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"slices"
+	"time"
 )
 
 type Task struct {
@@ -54,6 +55,7 @@ func main() {
 	fmt.Printf("given task is %s \n", *task)
 	fmt.Printf("id is %d \n", *task_id)
 	fmt.Printf("delete is %d \n", *task_delete)
+	fmt.Printf("mark-in-progress is %d \n", *task_mark_in_progress)
 
 	newTaskID := len(allTasks) + 1
 
@@ -65,6 +67,15 @@ func main() {
 
 	if *task_delete != 0 {
 		updatedTasks := deleteTaskByID(task_delete, allTasks)
+		fmt.Printf("%+v\n", updatedTasks)
+		data, _ := json.MarshalIndent(updatedTasks, "", "  ") // convert []byte
+		os.WriteFile(filename, data, 0644)
+		os.Exit(1)
+	}
+
+	if *task_mark_in_progress != 0 {
+
+		updatedTasks := markTaskInProgressById(task_mark_in_progress, allTasks)
 		fmt.Printf("%+v\n", updatedTasks)
 		data, _ := json.MarshalIndent(updatedTasks, "", "  ") // convert []byte
 		os.WriteFile(filename, data, 0644)
@@ -86,6 +97,18 @@ func deleteTaskByID(id *int, t []Task) []Task {
 
 	fmt.Printf("deleted %d", *id)
 	return t
+}
+
+func markTaskInProgressById(id *int, tasks []Task) []Task {
+
+	for index, _ := range tasks {
+		if *tasks[index].ID == *id {
+			tasks[index].Status = "in-progress"
+			tasks[index].UpdatedAt = time.Now().String()
+		}
+	}
+	fmt.Println("updated %d", *id)
+	return tasks
 }
 
 // 1. get type of task - add, update, delete, mark-in-progress, mark-done, list
