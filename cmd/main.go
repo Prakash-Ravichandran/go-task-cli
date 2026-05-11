@@ -48,14 +48,17 @@ func main() {
 	task_id := flag.Int("id", 0, "an identifer for the task") // TODO: remove it for add
 	// command: delete
 	task_delete := flag.Int("delete", 0, "delete a task with an id")
-	//command: mark-in-progress
+	// command: mark-in-progress
 	task_mark_in_progress := flag.Int("mark-in-progress", 0, "mark a task as in-progress")
+	// command: marh-done
+	task_mark_done := flag.Int("mark-done", 0, "mark a task as done")
 	flag.Parse()
 	fmt.Printf("given command is %s \n", *task_cli)
 	fmt.Printf("given task is %s \n", *task)
 	fmt.Printf("id is %d \n", *task_id)
 	fmt.Printf("delete is %d \n", *task_delete)
 	fmt.Printf("mark-in-progress is %d \n", *task_mark_in_progress)
+	fmt.Printf("mark-done is %d \n", *task_mark_done)
 
 	newTaskID := len(allTasks) + 1
 
@@ -81,6 +84,14 @@ func main() {
 		os.WriteFile(filename, data, 0644)
 		os.Exit(1)
 	}
+	if *task_mark_done != 0 {
+
+		updatedTasks := markTaskDoneById(task_mark_done, allTasks)
+		fmt.Printf("%+v\n", updatedTasks)
+		data, _ := json.MarshalIndent(updatedTasks, "", "  ") // convert []byte
+		os.WriteFile(filename, data, 0644)
+		os.Exit(1)
+	}
 
 	data, _ := json.MarshalIndent(allTasks, "", "  ") // convert []byte
 
@@ -101,13 +112,25 @@ func deleteTaskByID(id *int, t []Task) []Task {
 
 func markTaskInProgressById(id *int, tasks []Task) []Task {
 
-	for index, _ := range tasks {
+	for index := range tasks {
 		if *tasks[index].ID == *id {
 			tasks[index].Status = "in-progress"
 			tasks[index].UpdatedAt = time.Now().String()
 		}
 	}
-	fmt.Println("updated %d", *id)
+	fmt.Printf("updated %d", *id)
+	return tasks
+}
+
+func markTaskDoneById(id *int, tasks []Task) []Task {
+
+	for index := range tasks {
+		if *tasks[index].ID == *id {
+			tasks[index].Status = "done"
+			tasks[index].UpdatedAt = time.Now().String()
+		}
+	}
+	fmt.Printf("updated as done %d", *id)
 	return tasks
 }
 
