@@ -39,3 +39,14 @@ updates in tasks.json:
   "updatedat": "2026-05-11 10:54:09.7293626 +0530 IST m=+0.001138601"
 }
 ```
+
+## List a Task by status
+
+```bash
+
+ go run main.go --task-cli=list -list all
+ go run main.go --task-cli=list -list done
+ go run main.go --task-cli=list -lis todo
+ go run main.go --task-cli=list -list in-progress
+
+```
