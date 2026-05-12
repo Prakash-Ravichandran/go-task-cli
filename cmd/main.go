@@ -44,20 +44,25 @@ func main() {
 
 	var newTask Task
 	task_cli := flag.String("task-cli", "add", "a task for the user can add/update/delete task")
+	// command: -add
 	task := flag.String("add", "todo", "a task for the user can add to a task")
+	// command: -id
 	task_id := flag.Int("id", 0, "an identifer for the task") // TODO: remove it for add
-	// command: delete
+	// command: -delete
 	task_delete := flag.Int("delete", 0, "delete a task with an id")
-	// command: mark-in-progress
+	// command: -update
+	task_update := flag.Int("update", 0, "update a task with an id and description")
+	// command: -mark-in-progress
 	task_mark_in_progress := flag.Int("mark-in-progress", 0, "mark a task as in-progress")
-	// command: mark-done
+	// command: -mark-done
 	task_mark_done := flag.Int("mark-done", 0, "mark a task as done")
-	// command: list todo
+	// command: -list
 	task_list := flag.String("list", "all", "list all tasks which are done")
 	flag.Parse()
 	fmt.Printf("given command is %s \n", *task_cli)
 	fmt.Printf("given task is %s \n", *task)
 	fmt.Printf("id is %d \n", *task_id)
+	fmt.Printf("update a task is %d \n", *task_update)
 	fmt.Printf("delete is %d \n", *task_delete)
 	fmt.Printf("mark-in-progress is %d \n", *task_mark_in_progress)
 	fmt.Printf("mark-done is %d \n", *task_mark_done)
@@ -70,6 +75,16 @@ func main() {
 	newTask = Task{ID: newTaskID, Description: *task, Status: "todo", CreatedAt: time.Now().Format(time.RFC3339), UpdatedAt: time.Now().Format(time.RFC3339)}
 
 	allTasks = append(allTasks, newTask)
+
+	if *task_update != 0 {
+		updatedDescription := flag.Arg(0)
+		fmt.Println("updatedDescription", updatedDescription)
+		updatedTasks := updateTaskByID(task_update, updatedDescription, allTasks)
+		fmt.Printf("%+v\n", updatedTasks)
+		data, _ := json.MarshalIndent(updatedTasks, "", "  ") // convert []byte
+		os.WriteFile(filename, data, 0644)
+		os.Exit(1)
+	}
 
 	if *task_delete != 0 {
 		updatedTasks := deleteTaskByID(task_delete, allTasks)
@@ -105,7 +120,7 @@ func main() {
 			}
 
 			fmt.Println("all tasks list", allTasks)
-			os.Exit(1)
+			// os.Exit(1)
 		}
 	}
 
@@ -153,6 +168,16 @@ func deleteTaskByID(id *int, t []Task) []Task {
 	})
 
 	fmt.Printf("deleted %d", *id)
+	return t
+}
+func updateTaskByID(id *int, updatedDescription string, t []Task) []Task {
+	for index := range t {
+		if t[index].ID == *id {
+			t[index].Description = updatedDescription
+		}
+	}
+
+	fmt.Printf("updated %d", *id)
 	return t
 }
 

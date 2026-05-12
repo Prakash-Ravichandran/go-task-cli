@@ -2,6 +2,29 @@
 
 A Lightweight CLI task manager built with GO
 
+## Add a Task
+
+```bash
+
+ go run main.go --task-cli=add -add "buy banana"
+```
+
+### Update a Task by ID
+
+```bash
+go run main.go --task-cli=update -update 10 "buy car BMW"
+```
+
+## Delete a Task by ID
+
+```bash
+
+ go run main.go --task-cli=delete -delete 6
+
+```
+
+[commit](https://github.com/Prakash-Ravichandran/go-task-cli/commit/c77f8f034df1d8e2a4c4c6302e2b6895cbe02ae0)
+
 ## Mark a Task in progress
 
 ```bash
