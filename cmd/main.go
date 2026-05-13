@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -21,14 +20,9 @@ type Task struct {
 func main() {
 	filename := "tasks.json"
 
-	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
-
-	if err != nil {
-		if errors.Is(err, os.ErrExist) {
-			fmt.Println("File already exists")
-		} else {
-			fmt.Printf("Err in opening the file %v\n", err)
-		}
+	_, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		os.WriteFile(filename, []byte("[]"), 0644)
 	}
 
 	var allTasks []Task
@@ -45,7 +39,7 @@ func main() {
 	var newTask Task
 	task_cli := flag.String("task-cli", "add", "a task for the user can add/update/delete task")
 	// command: -add
-	task := flag.String("add", "todo", "a task for the user can add to a task")
+	task := flag.String("add", "", "a task for the user can add to a task")
 	// command: -id
 	task_id := flag.Int("id", 0, "an identifer for the task") // TODO: remove it for add
 	// command: -delete
@@ -69,97 +63,74 @@ func main() {
 	fmt.Printf("list all tasks is %s \n", *task_list)
 
 	newTaskID := len(allTasks) + 1
-
 	fmt.Println("newTaskID", newTaskID)
 
-	newTask = Task{ID: newTaskID, Description: *task, Status: "todo", CreatedAt: time.Now().Format(time.RFC3339), UpdatedAt: time.Now().Format(time.RFC3339)}
-
-	allTasks = append(allTasks, newTask)
+	if *task != "" {
+		newTask = Task{ID: newTaskID, Description: *task, Status: "todo", CreatedAt: time.Now().Format(time.RFC3339), UpdatedAt: time.Now().Format(time.RFC3339)}
+		allTasks = append(allTasks, newTask)
+		SaveToFile(filename, allTasks)
+		fmt.Printf("Task added successfully (ID: %d)\n", newTaskID)
+		return
+	}
 
 	if *task_update != 0 {
 		updatedDescription := flag.Arg(0)
-		fmt.Println("updatedDescription", updatedDescription)
+		if updatedDescription == "" {
+			fmt.Println("Error: Please provide a new description. Example: -update 1 'new text'")
+			return
+		}
 		updatedTasks := updateTaskByID(task_update, updatedDescription, allTasks)
 		fmt.Printf("%+v\n", updatedTasks)
-		data, _ := json.MarshalIndent(updatedTasks, "", "  ") // convert []byte
-		os.WriteFile(filename, data, 0644)
-		os.Exit(1)
+		SaveToFile(filename, updatedTasks)
+		return
 	}
 
 	if *task_delete != 0 {
 		updatedTasks := deleteTaskByID(task_delete, allTasks)
 		fmt.Printf("%+v\n", updatedTasks)
-		data, _ := json.MarshalIndent(updatedTasks, "", "  ") // convert []byte
-		os.WriteFile(filename, data, 0644)
-		os.Exit(1)
+		SaveToFile(filename, updatedTasks)
+		return
 	}
 
 	if *task_mark_in_progress != 0 {
 
 		updatedTasks := markTaskInProgressById(task_mark_in_progress, allTasks)
 		fmt.Printf("%+v\n", updatedTasks)
-		data, _ := json.MarshalIndent(updatedTasks, "", "  ") // convert []byte
-		os.WriteFile(filename, data, 0644)
-		os.Exit(1)
+		SaveToFile(filename, updatedTasks)
+		return
 	}
 	if *task_mark_done != 0 {
 
 		updatedTasks := markTaskDoneById(task_mark_done, allTasks)
 		fmt.Printf("%+v\n", updatedTasks)
-		data, _ := json.MarshalIndent(updatedTasks, "", "  ") // convert []byte
-		os.WriteFile(filename, data, 0644)
-		os.Exit(1)
+		SaveToFile(filename, updatedTasks)
+		return
 	}
 
 	if *task_list != "" {
-
-		if *task_list == "all" {
-			var tasktilte []string
-			for index := range allTasks {
-				tasktilte = append(tasktilte, allTasks[index].Description)
-			}
-
-			fmt.Println("all tasks list", allTasks)
-			// os.Exit(1)
-		}
+		listTasks(allTasks, *task_list)
 	}
+}
 
-	if *task_list != "" {
+func SaveToFile(filename string, tasks []Task) {
+	data, err := json.MarshalIndent(tasks, "", "  ") // convert []byte
 
-		if *task_list == "done" {
-			var taskDone []Task
-			for index := range allTasks {
-				if allTasks[index].Status == "done" {
-					taskDone = append(taskDone, allTasks[index])
-				}
-			}
-
-			fmt.Println("all done list", taskDone)
-			os.Exit(1)
-		}
+	if err != nil {
+		fmt.Println("Error encoding JSON:", err)
+		return
 	}
-
-	if *task_list != "" {
-
-		if *task_list == "in-progress" {
-			var tasksInProgress []Task
-			for index := range allTasks {
-				if allTasks[index].Status == "in-progress" {
-					tasksInProgress = append(tasksInProgress, allTasks[index])
-				}
-			}
-
-			fmt.Println("in progress list", tasksInProgress)
-			os.Exit(1)
-		}
-	}
-
-	data, _ := json.MarshalIndent(allTasks, "", "  ") // convert []byte
 
 	os.WriteFile(filename, data, 0644)
+}
 
-	fmt.Printf("Task added successfully (ID: %d)", newTaskID)
-	defer file.Close()
+func listTasks(tasks []Task, filter string) {
+	fmt.Println("ID  | Status          | Description")
+	fmt.Println("----|-----------------|------------")
+	for _, t := range tasks {
+		if filter == "" || filter == "all" || t.Status == filter {
+			fmt.Printf("%-3d | %-15s | %s\n", t.ID, t.Status, t.Description)
+		}
+	}
 }
 
 func deleteTaskByID(id *int, t []Task) []Task {
@@ -209,5 +180,3 @@ func markTaskDoneById(id *int, tasks []Task) []Task {
 // go run main.go --task-cli=add -add "sell mango" -id 3
 
 // TODO: reove id in flag
-// TODO: handle same task already exists
-// TODO: prints the address here fmt.Printf("%+v\n", updatedTasks)
