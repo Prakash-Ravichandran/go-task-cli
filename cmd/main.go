@@ -180,3 +180,4 @@ func markTaskDoneById(id *int, tasks []Task) []Task {
 // go run main.go --task-cli=add -add "sell mango" -id 3
 
 // TODO: reove id in flag
+// TODO: handle this - go run main.go --task-cli -add  "buy mobile 4"

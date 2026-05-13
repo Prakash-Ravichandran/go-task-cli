@@ -2,6 +2,35 @@
 
 A Lightweight CLI task manager built with GO
 
+## Build the Project
+
+```bash
+go build -o task-cli.exe ./cmd/main.go
+
+# To see list of available commands
+.\task-cli --help
+
+# add a task
+.\task-cli -add "Buy groceries"
+
+# update a task
+.\task-cli -update 1 "Buy groceries and cook dinner"
+
+# delete a task
+.\task-cli -delete 1
+
+# mark a task as progress/done/todo
+.\task-cli -mark-in-progress 1
+.\task-cli -mark-done 1
+.\task-cli -mark-todo 1
+
+# list all tasks by status
+.\task-cli -list all
+.\task-cli -list done
+.\task-cli -list todo
+.\task-cli -list in-progress
+```
+
 ## Add a Task
 
 ```bash
